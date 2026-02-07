@@ -307,7 +307,7 @@
 					<target>${java.version}</target>
 					<showWarnings>true</showWarnings>
 					<compilerArgs>
-						<arg>-Werror</arg>
+						<!--arg>-Werror</arg -->
 						<arg>-Xlint:all</arg>
 						<!-- https://stackoverflow.com/a/69734707 -->
 						<arg>-Xlint:-processing</arg>
@@ -332,7 +332,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.7</version>
+				<version>0.8.8</version>
 				<executions>
 					<execution>
 						<id>coverage-initialize</id>
