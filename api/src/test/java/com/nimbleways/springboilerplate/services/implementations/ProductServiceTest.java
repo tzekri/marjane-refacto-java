@@ -6,11 +6,13 @@ import com.nimbleways.springboilerplate.repositories.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
 class ProductServiceTest {
 
     @InjectMocks

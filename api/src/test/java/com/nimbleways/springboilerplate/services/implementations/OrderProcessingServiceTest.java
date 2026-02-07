@@ -6,11 +6,14 @@ import com.nimbleways.springboilerplate.entities.Product;
 import com.nimbleways.springboilerplate.enums.ProductType;
 import com.nimbleways.springboilerplate.repositories.OrderRepository;
 import com.nimbleways.springboilerplate.services.implementations.order.OrderProcessingService;
+import com.nimbleways.springboilerplate.services.implementations.product.ExpirableProductRule;
 import com.nimbleways.springboilerplate.services.implementations.product.NormalProductStrategy;
 import com.nimbleways.springboilerplate.services.implementations.product.ProductRuleFactory;
 import com.nimbleways.springboilerplate.services.implementations.product.SeasonalProductStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Set;
 
+@SpringBootTest
 class OrderProcessingServiceTest {
 
     private OrderRepository orderRepository;
@@ -77,4 +81,57 @@ class OrderProcessingServiceTest {
 
         assertEquals("Order not found", exception.getMessage());
     }
+
+    @Test
+    void processOrder_shouldProcessExpirableProduct() {
+        Product product = new Product();
+        product.setType("EXPIRABLE");
+
+        Order order = new Order();
+        order.setId(2L);
+        order.setItems(Set.of(product));
+
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(order));
+
+        ExpirableProductRule expirableStrategy = mock(ExpirableProductRule.class);
+        when(productRuleFactory.getStrategy(ProductType.EXPIRABLE)).thenReturn(expirableStrategy);
+
+        ProcessOrderResponse response = orderProcessingService.processOrder(2L);
+
+        assertEquals(2L, response.id());
+        verify(expirableStrategy, times(1)).process(product);
+    }
+
+    @Test
+    void processOrder_withEmptyItems_shouldReturnResponseWithoutProcessing() {
+        Order order = new Order();
+        order.setId(3L);
+        order.setItems(Set.of()); // empty
+
+        when(orderRepository.findById(3L)).thenReturn(Optional.of(order));
+
+        ProcessOrderResponse response = orderProcessingService.processOrder(3L);
+
+        assertEquals(3L, response.id());
+
+        // Verify no strategies were called
+        verifyNoInteractions(productRuleFactory);
+    }
+    @Test
+    void processOrder_withInvalidProductType_shouldThrowException() {
+        Product product = new Product();
+        product.setType("UNKNOWN"); // not in enum
+
+        Order order = new Order();
+        order.setId(4L);
+        order.setItems(Set.of(product));
+
+        when(orderRepository.findById(4L)).thenReturn(Optional.of(order));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            orderProcessingService.processOrder(4L);
+        });
+    }
+
+
 }
